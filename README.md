@@ -4,6 +4,12 @@ Instagram Analyzer is a production-style Streamlit dashboard for exploring
 Instagram export ZIP files without sharing credentials or manually unpacking
 archives.
 
+# Live Demo
+
+https://instagram-analyzer-followers.streamlit.app/
+
+Upload one or more Instagram export ZIP files and analyze followers, following, mutuals, fans, recently unfollowed accounts, and historical follower changes directly in your browser.
+
 ## Highlights
 
 - Upload one or more Instagram export ZIP files directly in the app
