@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import uuid
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
@@ -64,42 +66,49 @@ def test_load_uploaded_exports_reads_zip_contents() -> None:
     assert export.recently_unfollowed == {"dave"}
 
 
-def test_discover_local_exports_sorts_by_export_date(tmp_path: Path) -> None:
-    older_dir = (
-        tmp_path
-        / "instagram-sample_user-2026-06-01-AAA"
-        / "connections"
-        / "followers_and_following"
-    )
-    newer_dir = (
-        tmp_path
-        / "instagram-sample_user-2026-06-05-BBB"
-        / "connections"
-        / "followers_and_following"
-    )
-    older_dir.mkdir(parents=True)
-    newer_dir.mkdir(parents=True)
+def test_discover_local_exports_sorts_by_export_date() -> None:
+    tmp_path = Path("data") / f"test-exports-{uuid.uuid4().hex}"
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    try:
+        older_dir = (
+            tmp_path
+            / "instagram-sample_user-2026-06-01-AAA"
+            / "connections"
+            / "followers_and_following"
+        )
+        newer_dir = (
+            tmp_path
+            / "instagram-sample_user-2026-06-05-BBB"
+            / "connections"
+            / "followers_and_following"
+        )
+        older_dir.mkdir(parents=True)
+        newer_dir.mkdir(parents=True)
 
-    (older_dir / "followers_1.json").write_text(
-        json.dumps([{"string_list_data": [{"value": "alice"}]}]),
-        encoding="utf-8",
-    )
-    (older_dir / "following.json").write_text(
-        json.dumps({"relationships_following": [{"title": "alice"}]}),
-        encoding="utf-8",
-    )
-    (newer_dir / "followers_1.json").write_text(
-        json.dumps([{"string_list_data": [{"value": "alice"}, {"value": "bob"}]}]),
-        encoding="utf-8",
-    )
-    (newer_dir / "following.json").write_text(
-        json.dumps({"relationships_following": [{"title": "alice"}]}),
-        encoding="utf-8",
-    )
+        (older_dir / "followers_1.json").write_text(
+            json.dumps([{"string_list_data": [{"value": "alice"}]}]),
+            encoding="utf-8",
+        )
+        (older_dir / "following.json").write_text(
+            json.dumps({"relationships_following": [{"title": "alice"}]}),
+            encoding="utf-8",
+        )
+        (newer_dir / "followers_1.json").write_text(
+            json.dumps(
+                [{"string_list_data": [{"value": "alice"}, {"value": "bob"}]}]
+            ),
+            encoding="utf-8",
+        )
+        (newer_dir / "following.json").write_text(
+            json.dumps({"relationships_following": [{"title": "alice"}]}),
+            encoding="utf-8",
+        )
 
-    exports = discover_local_exports(tmp_path)
+        exports = discover_local_exports(tmp_path)
 
-    assert [export.metadata.export_date.isoformat() for export in exports] == [
-        "2026-06-01",
-        "2026-06-05",
-    ]
+        assert [export.metadata.export_date.isoformat() for export in exports] == [
+            "2026-06-01",
+            "2026-06-05",
+        ]
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
